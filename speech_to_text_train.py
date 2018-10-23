@@ -59,7 +59,6 @@ a big list.
 
 tok=Tokenizer(char_level=True);tok.fit_on_texts(all_words);
 
-print("tok: {}".format(tok))
 char_index=tok.word_index;index_char=dict((char_index[i],i) for i in char_index);
 char_vec=np.zeros((10000,maxlen_char),dtype=np.float32);
 #char_input=[[] for _ in np.arange(0,len(texts))];
@@ -83,7 +82,7 @@ for i in np.arange(0,len(texts)):
     if i%100==0:print("Completed {}".format(str(i*len(texts)**-1)));
 
 np.save(DIR+"/mfcc_vec",mfcc_vec);
-mfcc_vec_origin=np.load(DIR+"/mfcc_vec_origin.npy");
+mfcc_vec_origin=np.load(DIR+"/mfcc_vec.npy");
 maxlen_mfcc=673;
 mfcc_vec=np.zeros((10000,maxlen_mfcc,20),dtype=np.float32);
 for i in np.arange(0,len(mfcc_vec_origin)):
