@@ -12,11 +12,38 @@ from keras.optimizers import rmsprop, adam, adagrad, SGD;
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau;
 from keras.preprocessing.text import text_to_word_sequence, one_hot, Tokenizer;
 from keras.layers import Input, Dense, merge, Dropout, BatchNormalization, Activation, Conv1D, Lambda;
+# Getting the current working directory
 DIR=os.getcwd();
+
+"""
+The train.word.txt file contains a list of all the
+wav file names, along with their corresponding Chinese
+text.
+Sample format of this file is:
+A11_10 炮眼 打好 了 炸药 怎么 装 岳 正 才 咬 了 咬牙 倏 地 脱去 衣服 光膀子 冲进 了 水 窜 洞
+A11_100 可 谁知 纹 完 后 她 一 照镜子 只见 左下 眼睑 的 线 又 粗 又 黑 与 右侧 明显 不对称
+A11_102 一进门 我 被 惊呆 了 这 户 名叫 庞 吉 的 老农 是 抗美援朝 负伤 回乡 的 老兵 妻子 长年 有病 家徒四壁 一贫如洗
+A11_103 走出 村子 老远 老远 我 还 回头 张望 那个 安宁 恬静 的 小院 那个 使 我 终身 难忘的 小院
+
+Here, A11_10, A11_100, etc are the wav files which should
+be present in the DIR directory.
+"""
 with open(DIR+"/train.word.txt") as f:
     texts=f.read().split("\n");
 
+#print("texts: {}".format(texts[0:10]))
+
 del texts[-1];texts=[i.split(" ") for i in texts];
+"""
+By now, the texts have been tokenized, and have a 2D form,
+where each row erpresents wav filename as the first index,
+followed by tokenized individual mandarin symbols.
+First row, for instance looks like this:
+['A11_0', '绿', '是', '阳春', '烟', '景', '大块', '文章', '的', '底色',
+'四月', '的', '林', '峦', '更是', '绿', '得', '鲜活', '秀媚', '诗意', '盎然']
+"""
+
+#print("texts after loop: {}".format(texts[0:10]))
 all_words=[];maxlen_char=0;
 for i in np.arange(0,len(texts)):
     length=0;
@@ -25,8 +52,14 @@ for i in np.arange(0,len(texts)):
     if maxlen_char<=length:maxlen_char=length;
     for j in np.arange(1,len(texts[i])):
         all_words.append(texts[i][j]);
+"""
+By now, we have the entire curpus vocabulary, in the form of
+a big list.
+"""
 
 tok=Tokenizer(char_level=True);tok.fit_on_texts(all_words);
+
+print("tok: {}".format(tok))
 char_index=tok.word_index;index_char=dict((char_index[i],i) for i in char_index);
 char_vec=np.zeros((10000,maxlen_char),dtype=np.float32);
 #char_input=[[] for _ in np.arange(0,len(texts))];
@@ -38,7 +71,7 @@ for i in np.arange(0,len(texts)):
             char_vec[i,j]=char_index[ele];j+=1;
     char_length[i]=j;
 
-'''mfcc_vec=[[] for _ in np.arange(0,len(texts))];
+mfcc_vec=[[] for _ in np.arange(0,len(texts))];
 for i in np.arange(0,len(texts)):
     try:
         wav, sr = librosa.load(DIR + "/"+texts[i][0]+".wav", mono=True);
@@ -49,8 +82,8 @@ for i in np.arange(0,len(texts)):
     mfcc_vec[i]=mfcc;
     if i%100==0:print("Completed {}".format(str(i*len(texts)**-1)));
 
-np.save(DIR+"/mfcc_vec",mfcc_vec);'''
-'''mfcc_vec_origin=np.load(DIR+"/mfcc_vec_origin.npy");
+np.save(DIR+"/mfcc_vec",mfcc_vec);
+mfcc_vec_origin=np.load(DIR+"/mfcc_vec_origin.npy");
 maxlen_mfcc=673;
 mfcc_vec=np.zeros((10000,maxlen_mfcc,20),dtype=np.float32);
 for i in np.arange(0,len(mfcc_vec_origin)):
@@ -58,7 +91,7 @@ for i in np.arange(0,len(mfcc_vec_origin)):
         for k,ele in enumerate(mfcc_vec_origin[i][j]):
             mfcc_vec[i,j,k]=ele;
 
-np.save(DIR+"/mfcc_vec",mfcc_vec);'''
+np.save(DIR+"/mfcc_vec",mfcc_vec);
 
 
 mfcc_input=np.load(DIR+"/mfcc_vec.npy");
